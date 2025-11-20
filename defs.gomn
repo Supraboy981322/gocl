@@ -1,3 +1,8 @@
+["pkg"] := "package"
+["imp"] := |
+  ["imp"] := "import"
+  ["wr"] := "\"fmt\""
+|
 ["fn"] := "func"
 ["prim()"] := "main()"
 ["wr"] := |

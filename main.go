@@ -59,16 +59,16 @@ func parse(in []string, out []string, defs gomn.Map, sub bool) []string {
 			if !ok {
 				out = append(out, chunk)
 			} else {
-				for _, subChunk := range subFunc {
-					subChunkSplit := strings.Split(subChunk, "(")
-					newChunk, ok := subDefs[subChunkSplit[0]].(string)
-					newChunkSlice := []string{newChunk}
-					if len(subChunkSplit) > 1 {
-						subChunkSplit[1] = "("+subChunkSplit[1]
-						newChunkSlice = append(
-							parse(subChunkSplit[1:], 
-							newChunkSlice, defsGlob, false))
-					}
+				for _, subChunk := range subFunc {                   //
+					subChunkSplit := strings.Split(subChunk, "(")      //
+					newChunk, ok := subDefs[subChunkSplit[0]].(string) //
+					newChunkSlice := []string{newChunk}                //
+					if len(subChunkSplit) > 1 {                        //This is probably
+						subChunkSplit[1] = "("+subChunkSplit[1]          //  causing a bug
+						newChunkSlice = append(                          //
+							parse(subChunkSplit[1:],                       //
+								newChunkSlice, defsGlob, false))             //
+					}                                                  //
 					out = appOut(out, ok, strings.Join(newChunkSlice, ""), subChunk)
 				}
 			}
