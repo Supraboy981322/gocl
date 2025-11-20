@@ -46,9 +46,9 @@ func main() {
 	var output []string
 	output = parse(input, output, defsGlob, false)
 
-/*	for i, chunk := range output {
+	for i, chunk := range output {
 		fmt.Print(chunk + splitters[i])
-	}*/	fmt.Printf("new: %#v\n", output)
+	}//	fmt.Printf("new: %#v\n", output)
 }
 
 func parse(in []string, out []string, defs gomn.Map, sub bool) []string {
@@ -60,8 +60,16 @@ func parse(in []string, out []string, defs gomn.Map, sub bool) []string {
 				out = append(out, chunk)
 			} else {
 				for _, subChunk := range subFunc {
-					newChunk, ok := subDefs[subChunk].(string)
-					out = appOut(out, ok, newChunk, subChunk)
+					subChunkSplit := strings.Split(subChunk, "(")
+					newChunk, ok := subDefs[subChunkSplit[0]].(string)
+					newChunkSlice := []string{newChunk}
+					if len(subChunkSplit) > 1 {
+						subChunkSplit[1] = "("+subChunkSplit[1]
+						newChunkSlice = append(
+							parse(subChunkSplit[1:], 
+							newChunkSlice, defsGlob, false))
+					}
+					out = appOut(out, ok, strings.Join(newChunkSlice, ""), subChunk)
 				}
 			}
 		} else {
@@ -113,6 +121,5 @@ func subFuncSplitter(r rune) bool {
 		isString = true
 		return false
 	}
-
 	return r == '.'
 }
