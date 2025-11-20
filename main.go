@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	isString bool
 	input []string
 	splitters []string
 	defsGlob gomn.Map
@@ -45,9 +46,9 @@ func main() {
 	var output []string
 	output = parse(input, output, defsGlob, false)
 
-	for i, chunk := range output {
+/*	for i, chunk := range output {
 		fmt.Print(chunk + splitters[i])
-	}//	fmt.Printf("new: %#v\n", output)
+	}*/	fmt.Printf("new: %#v\n", output)
 }
 
 func parse(in []string, out []string, defs gomn.Map, sub bool) []string {
@@ -85,19 +86,33 @@ func appOut(old []string, cond bool, newVal string, oldVal string) []string {
 }
 
 func whitespaceSplitter(r rune) bool {
-	switch r {
-	case '\n':
-		splitters = append(splitters, "\n")
-		return true
-	case ' ':
-		splitters = append(splitters, " ")
-		return true
-	case '.':
-		splitters = append(splitters, ".")
+	if r == '"' {
+		isString = !isString
+		return false
+	} else if isString{
+		return false
+	} else {
+		switch r {
+		case '\n':
+			splitters = append(splitters, "\n")
+			return true
+		case ' ':
+			splitters = append(splitters, " ")
+			return true
+		case '.':
+			splitters = append(splitters, ".")
+		}
 	}
 	return false
 }
 
 func subFuncSplitter(r rune) bool {
+	if isString {
+		return false
+	} else if r == '"' {
+		isString = true
+		return false
+	}
+
 	return r == '.'
 }
