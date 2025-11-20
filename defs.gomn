@@ -1,10 +1,25 @@
-["pkg"] := "package"
-["imp"] := |
-  ["imp"] := "import"
-  ["wr"] := "\"fmt\""
+[0] := |
+  ["kill on warn"] := false
+  ["head end"] := ";;;"
+  ["head defs"] := |
+    ["pkg"] := "package"
+    ["imports"] := |
+      ["pattern"] := |
+        ["imp"] := "import"
+        ["divider"] := " "
+      |
+  
+      ["defs"] := |
+        ["wr"] := "\"fmt\""
+      |
+    |
+  |
 |
+
 ["fn"] := "func"
-["prim"] := "main"
+
+["prim()"] := "main()"
+
 ["wr"] := |
   ["wr"] := "fmt"
   ["l"] := "Println"

@@ -1,7 +1,6 @@
 pkg prim
-imp(
-  wr
-)
+imp wr
+;;;
 fn prim() {
   wr.l("foo bar baz qux")
 }

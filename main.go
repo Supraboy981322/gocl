@@ -11,76 +11,94 @@ import (
 
 var (
 	isString bool
+	killOnWarn bool
 	input []string
 	splitters []string
+	headEnd string
 	defsGlob gomn.Map
+	rcDefs gomn.Map	
+	imports gomn.Map
+	headDefs gomn.Map
 )
 
 func init() {
+	var ok bool
+
 	defsFile, err := os.ReadFile("defs.gomn")
 	if err != nil {
 		log.Fatalf("failed to read defs.gomn:\n  %v", err)
 	}
 	
-	defsGlob, err = gomn.Parse(string(defsFile))
-	if err != nil {
+	if defsGlob, err = gomn.Parse(string(defsFile)); err != nil {
 		log.Fatal(err)
 	}
 
+	if rcDefs, ok = defsGlob[0].(gomn.Map); !ok {
+		log.Warn("rc definitions not found, may produce odd results")
+		kilOcont("continuing anyways")
+	} else {
+		if killOnWarn, _ = rcDefs["kill on warn"].(bool); killOnWarn {
+			log.Info("configured to kill on warn")
+		}
+		if headEnd, ok = rcDefs["head end"].(string); !ok {
+			log.Warn("\"head end\" not defined in rc definitions, this will probably cause problems")
+			kilOcont("continuing anyways")
+		}
+	}
+	
 	inFile, err := os.ReadFile("foo.gocl")
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	
 	strFile := string(inFile)
 	var trimmedFile []string
 	for _, line := range strings.Split(strFile, "\n") {
 		trimmedFile = append(trimmedFile, strings.TrimSpace(line))
-		fmt.Println(line)
+//		fmt.Println(line)
 	}
 	input = append(input, strings.Join(trimmedFile, "\n"))
 }
 
 func main() {
-	input := strings.FieldsFunc(input[0], whitespaceSplitter)
-	var output []string
-	output = parse(input, output, defsGlob, false)
+	var ok bool
 
+	input := strings.FieldsFunc(input[0], whitespaceSplitter)
+
+	inputHeader := getHeader()
+	input = input[len(inputHeader):]
+
+	if headDefs, ok = rcDefs["head defs"].(gomn.Map); !ok {
+		kilOcont("head defs not defined")
+	}
+
+	if imports, ok = headDefs["imports"].(gomn.Map); !ok {
+		kilOcont("imports not defined, could be a non-problem")
+	}
+
+	//parse the header
+	var outputHeader []string
+	outputHeader = parseHeader(inputHeader, outputHeader)
+
+	//parse the main script
+	var outputMain []string
+	outputMain = parse(input, outputMain, defsGlob, false)
+
+	//combine them for output
+	output := make([]string, len(outputMain)+len(outputHeader))
+	copy(output, outputHeader)
+	copy(output[len(outputHeader):], outputMain)
+
+	//print it
+	//  (for testing, will be changed to write to file)
 	for i, chunk := range output {
 		fmt.Print(chunk + splitters[i])
 	}//	fmt.Printf("new: %#v\n", output)
 }
 
-func parse(in []string, out []string, defs gomn.Map, sub bool) []string {
-	for _, chunk := range in {
-		subFunc := strings.FieldsFunc(chunk, subFuncSplitter)
-		if len(subFunc) > 1 {
-			subDefs, ok := defs[subFunc[0]].(gomn.Map)
-			if !ok {
-				out = append(out, chunk)
-			} else {
-				for _, subChunk := range subFunc {                   //
-					subChunkSplit := strings.Split(subChunk, "(")      //
-					newChunk, ok := subDefs[subChunkSplit[0]].(string) //
-					newChunkSlice := []string{newChunk}                //
-					if len(subChunkSplit) > 1 {                        //This is probably
-						subChunkSplit[1] = "("+subChunkSplit[1]          //  causing a bug
-						newChunkSlice = append(                          //
-							parse(subChunkSplit[1:],                       //
-								newChunkSlice, defsGlob, false))             //
-					}                                                  //
-					out = appOut(out, ok, strings.Join(newChunkSlice, ""), subChunk)
-				}
-			}
-		} else {
-			if newChunk, ok := defs[chunk].(string); ok || sub {
-				subChunk, _ := defs[""].(string)
-				out = appOut(out, sub, subChunk, newChunk)
-			} else {
-				out = append(out, chunk)
-			}
-		}
-	}
+
+func importParser(old []string, defs gomn.Map) []string {
+	var out []string
 	return out
 }
 
@@ -122,4 +140,13 @@ func subFuncSplitter(r rune) bool {
 		return false
 	}
 	return r == '.'
+}
+
+func kilOcont(str string) {
+	log.Warn(str)
+	if killOnWarn {
+		os.Exit(1)
+	} else {
+		log.Info("continuing anyways")
+	}
 }
