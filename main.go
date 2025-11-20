@@ -4,15 +4,27 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"path/filepath"
 
 	"github.com/charmbracelet/log"
 	"github.com/Supraboy981322/gomn"
 )
 
 var (
+	//sorry, but I have a lot of
+	// vars to keep track of things 
+	//  and for configs
+	args = os.Args[1:]
+	er = log.New(os.Stderr)
 	isString bool
+	fileExt string
 	killOnWarn bool
+	writeFile bool
+	printOut bool
+	debug bool
 	input []string
+	inputFile string
+	outputFile string
 	inputHeader []string
 	splitters []string
 	headEnd string
@@ -26,31 +38,14 @@ var (
 )
 
 func init() {
-	var ok bool
+	readConf()
+	checkArgs()
 
-	defsFile, err := os.ReadFile("defs.gomn")
-	if err != nil {
-		log.Fatalf("failed to read defs.gomn:\n  %v", err)
-	}
-	
-	if defsGlob, err = gomn.Parse(string(defsFile)); err != nil {
-		log.Fatal(err)
-	}
+	//i get an odd bug if not defined this way
+	var err error
 
-	if rcDefs, ok = defsGlob[0].(gomn.Map); !ok {
-		log.Warn("rc definitions not found, may produce odd results")
-		kilOcont("continuing anyways")
-	} else {
-		if killOnWarn, _ = rcDefs["kill on warn"].(bool); killOnWarn {
-			log.Info("configured to kill on warn")
-		}
-		if headEnd, ok = rcDefs["head end"].(string); !ok {
-			log.Warn("\"head end\" not defined in rc definitions, this will probably cause problems")
-			kilOcont("continuing anyways")
-		}
-	}
 	
-	inFile, err := os.ReadFile("foo.gocl")
+	inFile, err := os.ReadFile(inputFile)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,19 +65,9 @@ func init() {
 }
 
 func main() {
-	var ok bool
 
 	input := strings.FieldsFunc(input[0], whitespaceSplitter)
 
-	if headDefs, ok = rcDefs["head defs"].(gomn.Map); !ok {
-		kilOcont("head defs not defined")
-	}
-
-	if importsMap, ok = headDefs["imports"].(gomn.Map); !ok {
-		kilOcont("imports map not found, could be a non-problem")
-	} else if importDefs, ok = importsMap["defs"].(gomn.Map); !ok {
-		kilOcont("imports map found, but no definitions found") 
-	}
 
 	//parse the header
 	var outputHeader []string
@@ -97,58 +82,30 @@ func main() {
 	copy(output, outputHeader)
 	copy(output[len(outputHeader):], outputMain)
 
-	//print it
-	//  (for testing, will be changed to write to file)
+	if debug { 
+		fmt.Printf("new: %#v\n", output)
+	}
+
+	var finalOut string
 	for i, chunk := range output {
 		if len(splitters)-1 < i {
 			splitters = append(splitters, "\n")
 		}
-		fmt.Print(chunk + splitters[i])
-	}//	fmt.Printf("new: %#v\n", output)
-}
-
-
-func importParser(old []string, defs gomn.Map) []string {
-	var out []string
-	return out
-}
-
-func appOut(old []string, cond bool, newVal string, oldVal string) []string {
-	if cond {
-		return append(old, newVal) 
-	} else {
-		return append(old, oldVal)
+		finalOut += chunk + splitters[i]
 	}
-	return []string{}
-}
 
-func whitespaceSplitter(r rune) bool {
-	if r == '"' {
-		isString = !isString
-		return false
-	} else if isString {
-		return false
-	} else {
-		switch r {
-		case '\n', ' ':
-			splitters = append(splitters, string(r))
-			return true
-			break
-		case '.':
-			splitters = append(splitters, ".")
-			return false
-		default:
-			break
+	if printOut {
+		fmt.Print(finalOut)
+	}
+	if writeFile {
+		if outputFile == "" {
+			orExt := filepath.Ext(inputFile)
+			orName := strings.TrimSuffix(filepath.Base(inputFile), orExt)
+			outputFile = orName + "." + fileExt
+			log.Warn("no output file, using input file name:  " + outputFile)
 		}
-	}
-	return false
-}
-
-func kilOcont(str string) {
-	log.Warn(str)
-	if killOnWarn {
-		os.Exit(1)
-	} else {
-		log.Info("continuing anyways")
+		if err := os.WriteFile(outputFile, []byte(finalOut), 0644); err != nil {
+			log.Fatalf("failed to write to file:  %v", err)
+		}
 	}
 }

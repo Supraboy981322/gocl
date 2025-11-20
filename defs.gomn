@@ -1,5 +1,9 @@
 [0] := |
+  ["print output"] := true
+  ["write to file"] := true
   ["kill on warn"] := false
+  ["debug"] := true
+  ["output file extension"] := "go"
   ["head end"] := ";;;"
   ["head defs"] := |
     ["pkg"] := "package"
