@@ -1,3 +1,5 @@
 fn prim() {
+  wr.l
   wr.l("foo bar baz qux")
+  wr.l
 }
