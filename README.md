@@ -3,7 +3,7 @@
 a user-defined programming "language" transpiler
 
 >[!WARNING]
->THIS IS ***SUPER*** EARLY, because of this, the repo is private, and the project can't do much yet
+>THIS IS ***SUPER*** EARLY and I haven't done much testing yet, better documentation will be made once I do more testing and feel that it's stable enough
 
 ---
 
