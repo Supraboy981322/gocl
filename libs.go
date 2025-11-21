@@ -158,7 +158,7 @@ func appOut(old []string, cond bool, newVal string, oldVal string) []string {
 	if cond {
 		log.Debug("condition true, returning with new value appended")
 		return append(old, newVal)
-	} else if !cont { //wanted to put a funny fatal message
+	} else if !cond { //wanted to put a funny fatal message
 		log.Debug("condition false, returning with old value appended") 
 		return append(old, oldVal)
 	} else { log.Fatal("shrodinger's boolean") }

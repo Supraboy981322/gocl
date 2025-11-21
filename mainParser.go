@@ -2,6 +2,7 @@ package main
 
 import (
 	"strings"
+	"github.com/charmbracelet/log"
 	"github.com/Supraboy981322/gomn"
 )
 
