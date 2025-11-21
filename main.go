@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"path/filepath"
@@ -18,6 +17,7 @@ var (
 	er = log.New(os.Stderr)
 	isString bool
 	fileExt string
+	execute bool
 	killOnWarn bool
 	writeFile bool
 	printOut bool
@@ -44,6 +44,9 @@ func init() {
 	//i get an odd bug if not defined this way
 	var err error
 
+	if inputFile == "" {
+		log.Debug("input file not set")
+	}
 	
 	inFile, err := os.ReadFile(inputFile)
 	if err != nil {
@@ -83,7 +86,7 @@ func main() {
 	copy(output[len(outputHeader):], outputMain)
 
 	if debug { 
-		fmt.Printf("new: %#v\n", output)
+		log.Debugf("new: %#v\n", output)
 	}
 
 	var finalOut string
@@ -95,7 +98,7 @@ func main() {
 	}
 
 	if printOut {
-		fmt.Print(finalOut)
+		log.Print(finalOut)
 	}
 	if writeFile {
 		if outputFile == "" {

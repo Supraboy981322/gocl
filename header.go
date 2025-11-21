@@ -19,18 +19,25 @@ func getHeader(in []string) []string {
 }
 	
 func parseHeader(in []string, out []string) []string {
+	log.Debug("parsing header")
 	for _, chunk := range in {
 		if newChunk, ok := headDefs[chunk].(string); ok {
+			log.Debug("matched header definition")
 			out = append(out, newChunk)
 		} else if impDefs, ok := importsMap[chunk].(string); ok {
+			log.Debug("matched as import")
+			log.Debug("import bool flipped")
 			isImp = !isImp
 			out = append(out, impDefs)
 		} else if imp, ok := importDefs[chunk].(string); ok && isImp {
+			log.Debug("matched import definition")
 			out = append(out, imp)
 		} else {
+			log.Debug("chunk unmatched, adding unchanged")
 			out = append(out, chunk)
 		}
 	}
 
+	log.Debug("returning header")
 	return out
 }

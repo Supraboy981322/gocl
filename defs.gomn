@@ -1,5 +1,5 @@
 [0] := |
-  ["print output"] := true
+  ["print output"] := false
   ["write to file"] := true
   ["kill on warn"] := false
   ["debug"] := true
